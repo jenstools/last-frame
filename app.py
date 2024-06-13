@@ -3,6 +3,7 @@ import cv2
 import requests
 import numpy as np
 from PIL import Image
+from urllib.parse import urlparse, parse_qs
 
 # Function to download video from URL
 def download_video(url, file_name):
@@ -24,10 +25,22 @@ def extract_last_frame(video_path):
     else:
         return None
 
+# Function to get URL parameters
+def get_url_params():
+    query_params = st.experimental_get_query_params()
+    if 'url' in query_params:
+        return query_params['url'][0]
+    return ""
+
 # Streamlit app interface
 st.title("Video Last Frame Extractor")
 
-video_url = st.text_input("Enter the video URL (mp4):")
+# Get the URL parameter
+default_url = get_url_params()
+
+# Input field for video URL with default value from URL parameter
+video_url = st.text_input("Enter the video URL (mp4):", value=default_url)
+
 if st.button("Download and Extract Last Frame"):
     if video_url:
         video_file_name = "downloaded_video.mp4"
@@ -45,10 +58,10 @@ if st.button("Download and Extract Last Frame"):
             # Convert frame to an image
             frame_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             frame_image.save(last_frame_image_name)
-            
+
             # Display the image
             st.image(frame_image, caption="Last Frame", use_column_width=True)
-            
+
             # Provide download link for the last frame
             with open(last_frame_image_name, "rb") as file:
                 btn = st.download_button(
