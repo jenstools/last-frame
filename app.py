@@ -57,12 +57,10 @@ def upscale_image(image, api_key):
         verbose=True,
     )
     
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='JPEG')
-    img_byte_arr = img_byte_arr.getvalue()
+    img_byte_arr = image_to_png_bytes(image)
     
     answers = stability_api.upscale(
-        init_image=image_to_png_bytes(image),
+        init_image=img_byte_arr,
         width=image.width * 2,  # upscale by 2x
         height=image.height * 2,  # upscale by 2x
         steps=50,  # optional
