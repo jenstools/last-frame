@@ -3,8 +3,10 @@ import cv2
 import requests
 import numpy as np
 from PIL import Image
-from urllib.parse import urlparse, parse_qs, unquote
-import os
+from urllib.parse import urlparse, parse_qs
+import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
+from stability_sdk import client
+import io
 
 # Function to download video from URL
 def download_video(url, file_name):
@@ -40,6 +42,33 @@ def generate_output_filename(video_url):
     base_name = os.path.splitext(video_filename)[0]
     return f"{base_name}_last-frame.jpg"
 
+# Function to upscale an image using Stability AI
+def upscale_image(image, api_key):
+    stability_api = client.StabilityInference(
+        key=api_key,
+        verbose=True,
+    )
+    
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr = img_byte_arr.getvalue()
+    
+    answers = stability_api.upscale(
+        init_image=img_byte_arr,
+        width=image.width * 2,  # upscale by 2x
+        height=image.height * 2,  # upscale by 2x
+        steps=50,  # optional
+    )
+
+    for resp in answers:
+        for artifact in resp.artifacts:
+            if artifact.finish_reason == generation.FILTER:
+                raise Exception("Your request activated the API's safety filters and could not be processed.")
+            if artifact.type == generation.ARTIFACT_IMAGE:
+                upscaled_image = Image.open(io.BytesIO(artifact.binary))
+                return upscaled_image
+    return None
+
 # Streamlit app interface
 st.title("Video Last Frame Extractor")
 
@@ -49,7 +78,10 @@ default_url = get_url_params()
 # Input field for video URL with default value from URL parameter
 video_url = st.text_input("Enter the video URL (mp4):", value=default_url)
 
-def process_video(url):
+# Input field for API key for upscaling
+api_key = st.text_input("Enter your Stability AI API key (optional for upscaling):")
+
+def process_video(url, api_key=None):
     video_file_name = "downloaded_video.mp4"
     output_file_name = generate_output_filename(url)
 
@@ -64,6 +96,12 @@ def process_video(url):
         st.write("Last frame extracted successfully.")
         # Convert frame to an image
         frame_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        
+        if api_key:
+            st.write("Upscaling image...")
+            frame_image = upscale_image(frame_image, api_key)
+            st.write("Image upscaled successfully.")
+
         frame_image.save(output_file_name)
 
         # Display the image
@@ -82,10 +120,10 @@ def process_video(url):
 
 # Check if URL parameter is present and process the video automatically
 if default_url:
-    process_video(default_url)
+    process_video(default_url, api_key)
 
 if st.button("Download and Extract Last Frame"):
     if video_url:
-        process_video(video_url)
+        process_video(video_url, api_key)
     else:
         st.write("Please enter a valid video URL.")
