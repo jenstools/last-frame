@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 from stability_sdk import client
 import io
-import os  # Ensure os is imported
+import os
 
 # Function to download video from URL
 def download_video(url, file_name):
@@ -43,6 +43,13 @@ def generate_output_filename(video_url):
     base_name = os.path.splitext(video_filename)[0]
     return f"{base_name}_last-frame.jpg"
 
+# Function to convert image to PNG bytes
+def image_to_png_bytes(image):
+    buf = io.BytesIO()
+    image.save(buf, format='PNG')
+    buf.seek(0)
+    return buf.getvalue()
+
 # Function to upscale an image using Stability AI
 def upscale_image(image, api_key):
     stability_api = client.StabilityInference(
@@ -55,7 +62,7 @@ def upscale_image(image, api_key):
     img_byte_arr = img_byte_arr.getvalue()
     
     answers = stability_api.upscale(
-        init_image=img_byte_arr,
+        init_image=image_to_png_bytes(image),
         width=image.width * 2,  # upscale by 2x
         height=image.height * 2,  # upscale by 2x
         steps=50,  # optional
