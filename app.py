@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 from stability_sdk import client
 import io
+import os  # Ensure os is imported
 
 # Function to download video from URL
 def download_video(url, file_name):
