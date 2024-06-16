@@ -97,8 +97,7 @@ default_url = get_url_params()
 # Input field for video URL with default value from URL parameter
 video_url = st.text_input("Enter the video URL (mp4):", value=default_url)
 
-# Input field for API key for upscaling
-api_key = st.text_input("Enter your Stability AI API key (optional for upscaling):")
+
 
 def process_video(url, api_key=None):
     video_file_name = "downloaded_video.mp4"
