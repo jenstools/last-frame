@@ -4,8 +4,6 @@ import requests
 import numpy as np
 from PIL import Image
 from urllib.parse import urlparse, parse_qs
-import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-from stability_sdk import client
 import io
 import os
 
@@ -17,9 +15,9 @@ st.markdown("""
 Like many other tools of this kind, Luma AI generates only short clips of up to 5 seconds. To create a longer video, you would need to use the end of each clip as the beginning of the next one. This is often tedious and time-consuming.
 
 ### The Solution: Last Frame Extractor Plugin & Web-App
-Here's where my solution comes into play. With the help of ChatGPT, I developed this Web-App and a [Chrome-Plugin](https://chromewebstore.google.com/detail/last-frame-extractor/bfacnjainlgpehaakhkcnpcbnfcmgdof?authuser=0&hl=en-GB) that take this work off your hands. The App extracts the last frame of a video and provides it as a JPG. You can then use this image as a prompt for the next video to seamlessly create longer clips.
+Here's where my solution comes into play. With the help of ChatGPT, I developed a Chrome plugin and a web app that take this work off your hands. The plugin extracts the last frame of a video and provides it as a JPG. You can then use this image as a prompt for the next video to seamlessly create longer clips.
 
-For more information, visit [Jens Marketing](https://jens.marketing) or message me on [LinkedIn](https://www.linkedin.com/in/jens-polomski/)
+For more information, visit [Jens Marketing](https://jens.marketing).
 """)
 
 # Function to download video from URL
@@ -56,38 +54,6 @@ def generate_output_filename(video_url):
     base_name = os.path.splitext(video_filename)[0]
     return f"{base_name}_last-frame.jpg"
 
-# Function to convert image to PNG bytes
-def image_to_png_bytes(image):
-    buf = io.BytesIO()
-    image.save(buf, format='PNG')
-    buf.seek(0)
-    return buf.getvalue()
-
-# Function to upscale an image using Stability AI
-def upscale_image(image, api_key):
-    stability_api = client.StabilityInference(
-        key=api_key,
-        verbose=True,
-    )
-    
-    img_byte_arr = image_to_png_bytes(image)
-    
-    answers = stability_api.upscale(
-        init_image=img_byte_arr,
-        width=image.width * 2,  # upscale by 2x
-        height=image.height * 2,  # upscale by 2x
-        steps=50,  # optional
-    )
-
-    for resp in answers:
-        for artifact in resp.artifacts:
-            if artifact.finish_reason == generation.FILTER:
-                raise Exception("Your request activated the API's safety filters and could not be processed.")
-            if artifact.type == generation.ARTIFACT_IMAGE:
-                upscaled_image = Image.open(io.BytesIO(artifact.binary))
-                return upscaled_image
-    return None
-
 # Streamlit app interface
 st.title("Video Last Frame Extractor")
 
@@ -97,9 +63,7 @@ default_url = get_url_params()
 # Input field for video URL with default value from URL parameter
 video_url = st.text_input("Enter the video URL (mp4):", value=default_url)
 
-
-
-def process_video(url, api_key=None):
+def process_video(url):
     video_file_name = "downloaded_video.mp4"
     output_file_name = generate_output_filename(url)
 
@@ -114,11 +78,6 @@ def process_video(url, api_key=None):
         st.write("Last frame extracted successfully.")
         # Convert frame to an image
         frame_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        
-        if api_key:
-            st.write("Upscaling image...")
-            frame_image = upscale_image(frame_image, api_key)
-            st.write("Image upscaled successfully.")
 
         # Ensure the final image is saved as JPG
         frame_image = frame_image.convert("RGB")
@@ -140,10 +99,10 @@ def process_video(url, api_key=None):
 
 # Check if URL parameter is present and process the video automatically
 if default_url:
-    process_video(default_url, api_key)
+    process_video(default_url)
 
 if st.button("Download and Extract Last Frame"):
     if video_url:
-        process_video(video_url, api_key)
+        process_video(video_url)
     else:
         st.write("Please enter a valid video URL.")
