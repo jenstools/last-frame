@@ -108,7 +108,9 @@ def process_video(url, api_key=None):
             frame_image = upscale_image(frame_image, api_key)
             st.write("Image upscaled successfully.")
 
-        frame_image.save(output_file_name)
+        # Ensure the final image is saved as JPG
+        frame_image = frame_image.convert("RGB")
+        frame_image.save(output_file_name, format='JPEG')
 
         # Display the image
         st.image(frame_image, caption="Last Frame", use_column_width=True)
