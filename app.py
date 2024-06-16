@@ -17,9 +17,9 @@ st.markdown("""
 Like many other tools of this kind, Luma AI generates only short clips of up to 5 seconds. To create a longer video, you would need to use the end of each clip as the beginning of the next one. This is often tedious and time-consuming.
 
 ### The Solution: Last Frame Extractor Plugin & Web-App
-Here's where my solution comes into play. With the help of ChatGPT, I developed a Chrome plugin and a web app that take this work off your hands. The plugin extracts the last frame of a video and provides it as a JPG. You can then use this image as a prompt for the next video to seamlessly create longer clips.
+Here's where my solution comes into play. With the help of ChatGPT, I developed this Web-App and a [Chrome-Plugin](https://chromewebstore.google.com/detail/last-frame-extractor/bfacnjainlgpehaakhkcnpcbnfcmgdof?authuser=0&hl=en-GB) that take this work off your hands. The App extracts the last frame of a video and provides it as a JPG. You can then use this image as a prompt for the next video to seamlessly create longer clips.
 
-For more information, visit [Jens Marketing](https://jens.marketing).
+For more information, visit [Jens Marketing](https://jens.marketing) or message me on [LinkedIn](https://www.linkedin.com/in/jens-polomski/)
 """)
 
 # Function to download video from URL
